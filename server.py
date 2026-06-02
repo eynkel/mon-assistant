@@ -12,25 +12,21 @@ CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-api_key = os.environ.get('OPENROUTER_API_KEY')
-logger.info(f"OPENROUTER_API_KEY présent: {bool(api_key)}")
-
-client = openai.OpenAI(
-    api_key=api_key,
-    base_url="https://openrouter.ai/api/v1",
-)
+def get_client():
+    api_key = os.environ.get('OPENROUTER_API_KEY')
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY non définie")
+    return openai.OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
 
 @app.route('/')
 def index():
     path = os.path.join(BASE_DIR, 'index.html')
-    logger.info(f"Serving index.html from: {path}")
     return send_file(path)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     messages = data.get('messages', [])
-    file_content = data.get('file_content', None)
     file_name = data.get('file_name', None)
 
     system_msg = {
@@ -45,10 +41,11 @@ def chat():
             content += f"\n\n[Pièce jointe: {msg['file_name']}]"
         full_messages.append({'role': msg['role'], 'content': content})
 
-    if file_content:
+    if file_name:
         full_messages.append({'role': 'system', 'content': f"[Fichier uploadé: {file_name}]"})
 
     try:
+        client = get_client()
         response = client.chat.completions.create(
             model="openai/gpt-4o-mini",
             messages=full_messages,
