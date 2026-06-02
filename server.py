@@ -27,7 +27,9 @@ def index():
 def chat():
     data = request.get_json()
     messages = data.get('messages', [])
-    file_name = data.get('file_name', None)
+
+    if data.get('file_name'):
+        return jsonify({'reply': 'Erreur: Les fichiers ne sont pas supportés par ce modèle. Formats texte uniquement (PDF, TXT, DOC, MD, CSV, JSON, code).'}), 400
 
     system_msg = {
         'role': 'system',
@@ -36,22 +38,18 @@ def chat():
 
     full_messages = [system_msg]
     for msg in messages:
-        content = msg['content']
-        if msg.get('file_name'):
-            content += f"\n\n[Pièce jointe: {msg['file_name']}]"
-        full_messages.append({'role': msg['role'], 'content': content})
-
-    if file_name:
-        full_messages.append({'role': 'system', 'content': f"[Fichier uploadé: {file_name}]"})
+        full_messages.append({'role': msg['role'], 'content': msg['content']})
 
     try:
         client = get_client()
         response = client.chat.completions.create(
             model="openai/gpt-4o-mini",
             messages=full_messages,
-            max_tokens=4096,
         )
         return jsonify({'reply': response.choices[0].message.content})
+    except openai.APIError as e:
+        logger.error(f"OpenRouter API Error: {e}")
+        return jsonify({'reply': f"Erreur OpenRouter: {str(e)}"}), 500
     except Exception as e:
         logger.error(f"OpenRouter error: {e}")
         return jsonify({'reply': f"Erreur: {str(e)}"}), 500

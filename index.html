@@ -34,11 +34,6 @@
         }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
-        .drop-active {
-            border: 2px dashed #3b82f6 !important;
-            background: rgba(59, 130, 246, 0.08) !important;
-        }
-
         .copy-btn { opacity: 0; transition: opacity 0.2s; }
         .group:hover .copy-btn { opacity: 1; }
 
@@ -81,18 +76,8 @@
     <main class="flex-1 flex flex-col glow min-w-0">
         <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
 
-        <div id="filePreview" class="hidden px-6 py-3 bg-slate-800/70 backdrop-blur border-y border-slate-700 flex items-center gap-3">
-            <span class="text-sm text-slate-300">📄 <span id="fileName"></span></span>
-            <span id="fileSize" class="text-xs text-slate-500"></span>
-            <button onclick="removeFile()" class="ml-auto text-slate-400 hover:text-red-400 transition p-1">✕</button>
-        </div>
-
         <div class="p-4 bg-slate-900/90 backdrop-blur border-t border-slate-700">
-            <div id="dropZone" class="max-w-4xl mx-auto flex gap-3 items-end">
-                <label class="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer transition flex-shrink-0" title="Joindre un fichier">
-                    <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.txt,.doc,.docx,.md,.csv,.json,.py,.js,.html,.css,.png,.jpg,.jpeg,.gif,.svg,.xml,.yaml,.yml,.sh,.bash,.ts,.tsx,.java,.c,.cpp,.h,.hpp">
-                </label>
+            <div class="max-w-4xl mx-auto flex gap-3 items-end">
                 <textarea id="message" rows="1" placeholder="Écrire un message..." class="flex-1 bg-slate-800 text-white px-4 py-3 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition resize-none overflow-y-auto"></textarea>
                 <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-6 py-3 rounded-xl transition font-medium shadow-lg shadow-blue-600/20 send-btn">Envoyer</button>
             </div>
@@ -102,7 +87,6 @@
     <script>
         let threads = JSON.parse(localStorage.getItem('chat_threads') || '{}');
         let currentId = localStorage.getItem('current_thread') || null;
-        let attachedFile = null;
 
         if (!currentId || !threads[currentId]) {
             currentId = 't_' + Date.now();
@@ -189,13 +173,6 @@
                 bubble.className = `${isUser ? 'msg-user' : 'msg-assistant'} group px-5 py-3 max-w-[75%] ${isUser ? 'text-right' : ''}`;
                 bubble.style = 'word-break: break-word; overflow-wrap: break-word;';
 
-                if (msg.file) {
-                    const fileInfo = document.createElement('div');
-                    fileInfo.className = 'text-xs text-slate-400 mb-2 flex items-center gap-1';
-                    fileInfo.innerHTML = `📎 ${escapeHtml(msg.file.name)}`;
-                    bubble.appendChild(fileInfo);
-                }
-
                 if (isUser) {
                     bubble.textContent = msg.content;
                 } else {
@@ -242,13 +219,10 @@
         async function sendMessage() {
             const input = document.getElementById('message');
             const content = input.value.trim();
-            if (!content && !attachedFile) return;
+            if (!content) return;
 
             const thread = threads[currentId];
             const userMsg = { role: 'user', content, timestamp: Date.now() };
-            if (attachedFile) {
-                userMsg.file = { name: attachedFile.name };
-            }
             thread.messages.push(userMsg);
 
             if (thread.messages.length === 1) {
@@ -266,26 +240,18 @@
             sendBtn.disabled = true;
             sendBtn.textContent = 'Envoi...';
 
-            let fileContent = null;
-            if (attachedFile) {
-                fileContent = await fileToBase64(attachedFile);
-                removeFile();
-            }
-
             showTyping();
 
-            try {
-                const msgs = thread.messages.map(m => ({ role: m.role, content: m.content, file_name: m.file ? m.file.name : null }));
-
+try {
                 const res = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: msgs, file_content: fileContent, file_name: attachedFile ? attachedFile.name : null })
+                    body: JSON.stringify({ messages: msgs })
                 });
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
                 const data = await res.json();
+                if (!res.ok) throw new Error(data.reply || `HTTP ${res.status}`);
+
                 removeTyping();
 
                 thread.messages.push({ role: 'assistant', content: data.reply, timestamp: Date.now() });
@@ -294,22 +260,13 @@
 
             } catch (err) {
                 removeTyping();
-                thread.messages.push({ role: 'assistant', content: `Erreur de connexion: ${err.message}. Vérifiez que le serveur est actif.`, timestamp: Date.now(), isError: true });
+                thread.messages.push({ role: 'assistant', content: `Erreur: ${err.message}`, timestamp: Date.now(), isError: true });
                 save();
                 renderMessages();
             }
 
             sendBtn.disabled = false;
             sendBtn.textContent = 'Envoyer';
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
         }
 
         function showTyping() {
@@ -327,27 +284,6 @@
             if (el) el.remove();
         }
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            attachedFile = file;
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = formatFileSize(file.size);
-            document.getElementById('filePreview').classList.remove('hidden');
-        });
-
-        function removeFile() {
-            attachedFile = null;
-            document.getElementById('fileInput').value = '';
-            document.getElementById('filePreview').classList.add('hidden');
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' o';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
-            return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
-        }
-
         const textarea = document.getElementById('message');
         textarea.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -358,26 +294,6 @@
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
-            }
-        });
-
-        const dropZone = document.getElementById('dropZone');
-        document.body.addEventListener('dragover', e => {
-            e.preventDefault();
-            dropZone.classList.add('drop-active');
-        });
-        document.body.addEventListener('dragleave', e => {
-            if (!e.relatedTarget) dropZone.classList.remove('drop-active');
-        });
-        document.body.addEventListener('drop', e => {
-            e.preventDefault();
-            dropZone.classList.remove('drop-active');
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                attachedFile = file;
-                document.getElementById('fileName').textContent = file.name;
-                document.getElementById('fileSize').textContent = formatFileSize(file.size);
-                document.getElementById('filePreview').classList.remove('hidden');
             }
         });
 
