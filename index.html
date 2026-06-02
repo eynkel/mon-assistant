@@ -25,9 +25,7 @@
             border-radius: 18px 18px 18px 4px;
         }
 
-        .glow {
-            box-shadow: 0 0 60px rgba(59, 130, 246, 0.1);
-        }
+        .glow { box-shadow: 0 0 60px rgba(59, 130, 246, 0.1); }
 
         .typing::after {
             content: '▍';
@@ -36,30 +34,19 @@
         }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
         .drop-active {
             border: 2px dashed #3b82f6 !important;
             background: rgba(59, 130, 246, 0.08) !important;
         }
 
-        .copy-btn {
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
+        .copy-btn { opacity: 0; transition: opacity 0.2s; }
         .group:hover .copy-btn { opacity: 1; }
 
-        pre { position: relative; }
         pre code { font-family: 'Fira Code', 'Consolas', monospace; }
-
-        html, body { overflow-x: hidden; }
 
         #message { min-height: 48px; max-height: 200px; }
 
-        .thread-item {
-            transition: all 0.15s ease;
-        }
+        .thread-item { transition: all 0.15s ease; }
         .thread-item:hover { background: rgba(255,255,255,0.05); }
         .thread-item.active { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; }
 
@@ -67,6 +54,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error-msg { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden">
@@ -132,7 +121,7 @@
             sorted.forEach(t => {
                 const div = document.createElement('div');
                 div.className = `thread-item px-3 py-2 rounded-lg cursor-pointer text-sm text-slate-300 ${t.id === currentId ? 'active' : ''}`;
-                div.innerHTML = `<div class="flex items-center gap-2"><span class="truncate flex-1">${escapeHtml(t.name)}</span><span class="text-xs text-slate-600">${t.messages.length}</span></div>`;
+                div.innerHTML = `<div class="flex items-center gap-2"><span class="truncate flex-1">${escapeHtml(t.name)}</span><button onclick="event.stopPropagation(); deleteThread('${t.id}')" class="text-slate-600 hover:text-red-400 ml-auto text-xs">✕</button></div>`;
                 div.onclick = () => switchThread(t.id);
                 el.appendChild(div);
             });
@@ -159,8 +148,7 @@
             if (Object.keys(threads).length === 0) {
                 newThread();
             } else if (id === currentId) {
-                const keys = Object.keys(threads);
-                currentId = keys[keys.length - 1];
+                currentId = Object.keys(threads)[0];
             }
             save();
             renderThreads();
@@ -191,7 +179,7 @@
                 return;
             }
 
-            thread.messages.forEach((msg, i) => {
+            thread.messages.forEach(msg => {
                 const isUser = msg.role === 'user';
                 const div = document.createElement('div');
                 div.className = `fade-in flex ${isUser ? 'justify-end' : 'justify-start'}`;
@@ -250,6 +238,79 @@
             return escapeHtml(text).replace(/\n/g, '<br>');
         }
 
+        async function sendMessage() {
+            const input = document.getElementById('message');
+            const content = input.value.trim();
+            if (!content && !attachedFile) return;
+
+            const thread = threads[currentId];
+            const userMsg = { role: 'user', content, timestamp: Date.now() };
+            if (attachedFile) {
+                userMsg.file = { name: attachedFile.name };
+            }
+            thread.messages.push(userMsg);
+
+            if (thread.messages.length === 1) {
+                thread.name = content.substring(0, 40) + (content.length > 40 ? '...' : '');
+            }
+
+            save();
+            renderThreads();
+            renderMessages();
+
+            input.value = '';
+            input.style.height = 'auto';
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Envoi...';
+
+            let fileContent = null;
+            if (attachedFile) {
+                fileContent = await fileToBase64(attachedFile);
+                removeFile();
+            }
+
+            showTyping();
+
+            try {
+                const msgs = thread.messages.map(m => ({ role: m.role, content: m.content, file_name: m.file ? m.file.name : null }));
+
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: msgs, file_content: fileContent, file_name: attachedFile ? attachedFile.name : null })
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                removeTyping();
+
+                thread.messages.push({ role: 'assistant', content: data.reply, timestamp: Date.now() });
+                save();
+                renderMessages();
+
+            } catch (err) {
+                removeTyping();
+                thread.messages.push({ role: 'assistant', content: `Erreur de connexion: ${err.message}. Vérifiez que le serveur est actif.`, timestamp: Date.now(), isError: true });
+                save();
+                renderMessages();
+            }
+
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Envoyer';
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         function showTyping() {
             const chat = document.getElementById('chat');
             const div = document.createElement('div');
@@ -263,81 +324,6 @@
         function removeTyping() {
             const el = document.getElementById('typingIndicator');
             if (el) el.remove();
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('message');
-            const content = input.value.trim();
-            if (!content && !attachedFile) return;
-
-            const thread = threads[currentId];
-            const userMsg = { role: 'user', content, timestamp: Date.now() };
-            if (attachedFile) userMsg.file = attachedFile;
-            thread.messages.push(userMsg);
-
-            if (thread.messages.length === 1) {
-                thread.name = content.substring(0, 40) + (content.length > 40 ? '...' : '');
-            }
-
-            save();
-            renderThreads();
-            renderMessages();
-
-            input.value = '';
-            input.style.height = 'auto';
-            removeFile();
-
-            showTyping();
-
-            const msgs = thread.messages.map(m => ({ role: m.role, content: m.content }));
-            if (attachedFile) {
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    const base64 = reader.result.split(',')[1];
-                    msgs[msgs.length - 1].content += `\n\n[Fichier: ${attachedFile.name}]`;
-                    await generateResponse(msgs);
-                };
-                reader.readAsDataURL(attachedFile);
-            } else {
-                await generateResponse(msgs);
-            }
-        }
-
-        async function generateResponse(messages) {
-            try {
-                removeTyping();
-                const chat = document.getElementById('chat');
-                const div = document.createElement('div');
-                div.className = 'flex justify-start fade-in';
-                div.innerHTML = `<div class="msg-assistant px-5 py-3"><span class="typing text-slate-300">En train d'écrire</span></div>`;
-                chat.appendChild(div);
-                chat.scrollTop = chat.scrollHeight;
-
-                await new Promise(r => setTimeout(r, 1500));
-
-                removeTyping();
-
-                const responses = [
-                    "Je comprends votre demande. Laissez-moi vous fournir une réponse détaillée.\n\n## Analyse\n\n1. Premier point important\n2. Deuxième point\n3. Conclusion\n\n```javascript\n// Exemple de code\nconst example = 'hello';\nconsole.log(example);\n```",
-                    "Bonjour ! Je suis prêt à vous aider. Pouvez-vous préciser votre question ?\n\n- Option 1\n- Option 2\n- Option 3",
-                    "Voici ce que je propose :\n\n> Une citation interesante\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                    "Parfait ! Voici la solution :\n\n| Colonne 1 | Colonne 2 |\n|-----------|-----------|\n| Donnée 1  | Donnée 2  |\n| Donnée 3  | Donnée 4  |"
-                ];
-
-                const response = responses[Math.floor(Math.random() * responses.length)];
-
-                const thread = threads[currentId];
-                thread.messages.push({ role: 'assistant', content: response, timestamp: Date.now() });
-                save();
-                renderMessages();
-
-            } catch (err) {
-                removeTyping();
-                const thread = threads[currentId];
-                thread.messages.push({ role: 'assistant', content: 'Erreur: ' + err.message, timestamp: Date.now() });
-                save();
-                renderMessages();
-            }
         }
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
