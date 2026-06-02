@@ -1,12 +1,20 @@
 import os
-from flask import Flask, request, jsonify, send_from_directory
+import logging
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import openai
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 api_key = os.environ.get('OPENROUTER_API_KEY')
+logger.info(f"OPENROUTER_API_KEY présent: {bool(api_key)}")
+
 client = openai.OpenAI(
     api_key=api_key,
     base_url="https://openrouter.ai/api/v1",
@@ -14,7 +22,9 @@ client = openai.OpenAI(
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    path = os.path.join(BASE_DIR, 'index.html')
+    logger.info(f"Serving index.html from: {path}")
+    return send_file(path)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -36,18 +46,20 @@ def chat():
         full_messages.append({'role': msg['role'], 'content': content})
 
     if file_content:
-        full_messages.append({'role': 'system', 'content': f"[Fichier uploadé: {file_name}] Contenu base64: {file_content}"})
+        full_messages.append({'role': 'system', 'content': f"[Fichier uploadé: {file_name}]"})
 
-    response = client.chat.completions.create(
-        model="openai/gpt-4o-mini",
-        messages=full_messages,
-        max_tokens=4096,
-    )
-
-    return jsonify({
-        'reply': response.choices[0].message.content
-    })
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-4o-mini",
+            messages=full_messages,
+            max_tokens=4096,
+        )
+        return jsonify({'reply': response.choices[0].message.content})
+    except Exception as e:
+        logger.error(f"OpenRouter error: {e}")
+        return jsonify({'reply': f"Erreur: {str(e)}"}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
+    logger.info(f"Démarrage sur port {port}")
     app.run(host='0.0.0.0', port=port)
