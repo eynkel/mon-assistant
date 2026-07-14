@@ -1,304 +1,316 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistant IA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Awaken Lions — old roots, modern static, raw force</title>
+  <meta name="description" content="Awaken Lions. Three currents, one wave — electro, epic metal, tribal roots. Long-form music as a path of awakening. Something is stirring.">
+  <meta property="og:title" content="Awaken Lions">
+  <meta property="og:description" content="Three currents, one wave. Something is stirring.">
+  <meta property="og:image" content="https://awaken-lions.com/hero.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://awaken-lions.com">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IBM+Plex+Sans:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family:'Melete';
+      src:url('/melete-regular.woff2') format('woff2');
+      font-weight:400; font-display:swap;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root { --stone:#A0937D; --sand:#C4B69C; --fog:#7A7A7A; --deep:#0B0B0B; --charcoal:#161614; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--deep); color:var(--stone);
+      font-family:'IBM Plex Sans',sans-serif; font-weight:300;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      overflow-x:hidden; }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    /* ── ONDE (fil conducteur visuel) ── */
+    .wave { width:100%; max-width:1100px; height:46px; overflow:hidden;
+      opacity:.35; margin:1.2rem 0; }
+    .wave svg { width:200%; height:100%; animation:drift 26s linear infinite; }
+    .wave.w2 svg { animation-duration:38s; animation-direction:reverse; opacity:.6; }
+    @keyframes drift { from { transform:translateX(0); } to { transform:translateX(-50%); } }
 
-        .msg-user {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 18px 18px 4px 18px;
-        }
-        .msg-assistant {
-            background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
-            border-radius: 18px 18px 18px 4px;
-        }
+    /* ── HERO ── */
+    .hero { width:100%; max-width:1200px; padding:6vh 1.5rem 0;
+      display:flex; flex-direction:column; align-items:center; }
+    .hero img.mark { width:min(200px,40vw); height:auto;
+      opacity:0; animation:emerge 2.2s ease-out .2s forwards; }
+    .hero h1 { font-family:'Melete','Cinzel',serif; font-weight:400;
+      font-size:clamp(1.7rem,5.5vw,2.9rem); color:var(--sand);
+      letter-spacing:.24em; margin-top:1.6rem; text-align:center;
+      opacity:0; animation:emerge 2.2s ease-out .7s forwards; }
+    @keyframes emerge { 0%{opacity:0; transform:scale(.97); filter:blur(6px);}
+                        100%{opacity:1; transform:scale(1); filter:blur(0);} }
 
-        .glow { box-shadow: 0 0 60px rgba(59, 130, 246, 0.1); }
+    .tagline { font-family:'Cinzel',serif; font-size:clamp(1rem,2.4vw,1.35rem);
+      color:var(--sand); letter-spacing:.14em; text-align:center;
+      margin:2.2rem 0 .8rem; opacity:0; animation:fadeUp 1.6s ease-out 1.4s forwards; }
+    @keyframes fadeUp { 0%{opacity:0; transform:translateY(18px);}
+                        100%{opacity:1; transform:translateY(0);} }
 
-        .typing::after {
-            content: '▍';
-            animation: blink 0.8s infinite;
-            color: #60a5fa;
-        }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+    /* lisibilité sur l'onde : fine ombre sombre autour des lettres */
+    h1, h2, .tagline, p.body, .note, .frame span, .foot {
+      text-shadow: 0 0 10px rgba(11,11,11,.95), 0 0 3px rgba(11,11,11,.9),
+                   0 1px 2px rgba(11,11,11,.9); }
+    section { max-width:680px; padding:2.5rem 1.5rem; text-align:center; width:100%; }
+    h2 { font-family:'Cinzel',serif; font-weight:400; font-size:1.05rem;
+      letter-spacing:.28em; color:var(--stone); text-transform:uppercase;
+      margin-bottom:1.6rem; }
+    p.body { font-size:.98rem; color:var(--fog); line-height:1.9; }
+    p.body b { color:var(--sand); font-weight:400; }
+    .sep { width:40px; height:1px; background:var(--stone); opacity:.3; margin:0 auto 2rem; }
 
-        .copy-btn { opacity: 0; transition: opacity 0.2s; }
-        .group:hover .copy-btn { opacity: 1; }
+    /* ── WATCH ── */
+    .frame { position:relative; width:100%; aspect-ratio:16/9;
+      background:var(--charcoal); border:1px solid #26241f;
+      display:flex; align-items:center; justify-content:center; }
+    .frame span { color:var(--fog); font-family:'Cinzel',serif;
+      letter-spacing:.18em; font-size:.85rem; }
+    .frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
 
-        pre code { font-family: 'Fira Code', 'Consolas', monospace; }
+    /* ── BOUTONS ── */
+    .btn { display:inline-block; padding:.8rem 2.2rem; border:1px solid var(--stone);
+      color:var(--sand); font-family:'Cinzel',serif; font-size:.85rem;
+      letter-spacing:.15em; text-decoration:none; text-transform:uppercase;
+      transition:all .4s ease; background:none; cursor:pointer; }
+    .btn:hover, .btn:focus { background:var(--stone); color:var(--deep); }
+    .btn.primary { border-width:2px; }
+    .note { font-size:.78rem; color:var(--fog); margin-top:1rem; opacity:.8; }
 
-        #message { min-height: 48px; max-height: 200px; }
+    /* ── FOOTER ── */
+    .foot { margin-top:auto; padding:2.5rem 1.5rem 2rem; font-size:.75rem;
+      color:var(--fog); opacity:.5; text-align:center; line-height:2; }
+    .foot a { color:inherit; }
+    .foot .rune { text-decoration:none; opacity:.5; font-size:.9rem; padding:0 .3rem; }
+    .foot .rune:hover { opacity:1; color:var(--sand); }
 
-        .thread-item { transition: all 0.15s ease; }
-        .thread-item:hover { background: rgba(255,255,255,0.05); }
-        .thread-item.active { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; }
-
-        .fade-in { animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-        .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .error-msg { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); }
-    </style>
+    @media (prefers-reduced-motion: reduce) {
+      .hero img.mark, .hero h1, .tagline { animation:none; opacity:1; }
+      .wave svg { animation:none; }
+    }
+  </style>
 </head>
-<body class="h-screen flex overflow-hidden">
-    <aside id="sidebar" class="w-64 bg-slate-900 border-r border-slate-700 flex flex-col flex-shrink-0">
-        <div class="p-4 border-b border-slate-700">
-            <h1 class="text-lg font-bold text-blue-400 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                Assistant IA
-            </h1>
-        </div>
-        <div class="p-3">
-            <button onclick="newThread()" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 transition font-medium shadow-lg shadow-blue-600/20">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Nouveau thread
-            </button>
-        </div>
-        <div id="threads" class="flex-1 overflow-y-auto px-2 py-1 space-y-1"></div>
-        <div class="p-3 border-t border-slate-700 text-xs text-slate-500 text-center">
-            💾 Sauvegardé localement
-        </div>
-    </aside>
+<body>
 
-    <main class="flex-1 flex flex-col glow min-w-0">
-        <div id="chat" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+  <canvas id="ondes" aria-hidden="true"
+    style="position:fixed;inset:0;z-index:-1;opacity:.8"></canvas>
 
-        <div class="p-4 bg-slate-900/90 backdrop-blur border-t border-slate-700">
-            <div class="max-w-4xl mx-auto flex gap-3 items-end">
-                <textarea id="message" rows="1" placeholder="Écrire un message..." class="flex-1 bg-slate-800 text-white px-4 py-3 rounded-xl border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition resize-none overflow-y-auto"></textarea>
-                <button onclick="sendMessage()" id="sendBtn" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 px-6 py-3 rounded-xl transition font-medium shadow-lg shadow-blue-600/20 send-btn">Envoyer</button>
-            </div>
-        </div>
-    </main>
+  <div class="hero">
+    <img class="mark" src="/icon-512.png" alt="Awaken Lions" width="200" height="200">
+    <h1 translate="no" class="notranslate">AWAKEN&nbsp;LIONS</h1>
+  </div>
 
+  <p class="tagline">Something is stirring.</p>
+
+  <!-- ═══ WATCH ═══ -->
+  <section id="watch">
+    <h2>Listen</h2>
+    <div class="frame">
+      <iframe src="https://www.youtube-nocookie.com/embed/yhH8lnotKt8"
+        title="Awaken Lions — Hi Ren (Cover)" allowfullscreen
+        allow="accelerometer; encrypted-media; picture-in-picture"
+        loading="lazy"></iframe>
+    </div>
+    <p class="note">Hi Ren, rebuilt — metal, reggae, beatbox where the villain
+      speaks. All 9:48 of it.</p>
+  </section>
+
+  <!-- ═══ THE CURRENT ═══ -->
+  <section id="current">
+    <div class="sep"></div>
+    <h2>The Current</h2>
+    <p class="body">
+      Three currents, one wave. <b>Modern static</b> — electro pulse, torn and
+      restless. <b>Epic force</b> — metal that stands its ground. <b>Old
+      roots</b> — tribal earth, the shaman's floor under it all.<br><br>
+      Long-form journeys, not disposable loops. Music built as a
+      <b>process of opening</b> — eyes, mind, breath. Power. Courage.
+      Perseverance. The lucidity to face what is real — and the wisdom
+      nature never stopped offering.<br><br>
+      No gurus here. Just a path, walked out loud.
+    </p>
+  </section>
+
+  <!-- ═══ JOIN ═══ -->
+  <section id="join">
+    <h2>Join the Pride</h2>
+    <p class="body">
+      The pride gathers before the first roar.<br>
+      Be the first to hear every release — and the first to see
+      the threads others miss.
+    </p><br>
+    <form id="join-form" style="display:flex;flex-direction:column;gap:.8rem;
+          max-width:340px;margin:0 auto" autocomplete="on">
+      <input name="name" type="text" placeholder="First name" maxlength="60"
+        style="background:var(--charcoal);border:1px solid var(--stone);
+        color:var(--sand);padding:.7rem 1rem;font:inherit;text-align:center">
+      <input name="email" type="email" required placeholder="Email" maxlength="120"
+        style="background:var(--charcoal);border:1px solid var(--stone);
+        color:var(--sand);padding:.7rem 1rem;font:inherit;text-align:center">
+      <button class="btn primary" type="submit">Be there when it drops</button>
+    </form>
+    <p class="note" id="join-note">No spam. Just signal. Unsubscribe anytime
+      — one email to contact@awaken-lions.com.</p>
     <script>
-        let threads = JSON.parse(localStorage.getItem('chat_threads') || '{}');
-        let currentId = localStorage.getItem('current_thread') || null;
-
-        if (!currentId || !threads[currentId]) {
-            currentId = 't_' + Date.now();
-            threads[currentId] = { id: currentId, name: 'Nouvelle conversation', messages: [], createdAt: Date.now() };
-        }
-
-        function save() {
-            localStorage.setItem('chat_threads', JSON.stringify(threads));
-            localStorage.setItem('current_thread', currentId);
-        }
-
-        function renderThreads() {
-            const el = document.getElementById('threads');
-            el.innerHTML = '';
-            const vals = Object.values(threads).filter(t => t && t.id);
-            const sorted = vals.sort((a, b) => ((b.createdAt || b.created || 0)) - ((a.createdAt || a.created || 0)));
-            sorted.forEach(t => {
-                const div = document.createElement('div');
-                div.className = `thread-item px-3 py-2 rounded-lg cursor-pointer text-sm text-slate-300 ${t.id === currentId ? 'active' : ''}`;
-                div.innerHTML = `<div class="flex items-center gap-2"><span class="truncate flex-1">${escapeHtml(t.name)}</span><button onclick="event.stopPropagation(); deleteThread('${t.id}')" class="text-slate-600 hover:text-red-400 ml-auto text-xs">✕</button></div>`;
-                div.onclick = () => switchThread(t.id);
-                el.appendChild(div);
-            });
-        }
-
-        function switchThread(id) {
-            currentId = id;
-            save();
-            renderThreads();
-            renderMessages();
-        }
-
-        function newThread() {
-            currentId = 't_' + Date.now();
-            threads[currentId] = { id: currentId, name: 'Nouvelle conversation', messages: [], createdAt: Date.now() };
-            save();
-            renderThreads();
-            renderMessages();
-            document.getElementById('message').focus();
-        }
-
-        function deleteThread(id) {
-            delete threads[id];
-            if (Object.keys(threads).length === 0) {
-                newThread();
-            } else if (id === currentId) {
-                currentId = Object.keys(threads)[0];
-            }
-            save();
-            renderThreads();
-            renderMessages();
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function renderMessages() {
-            const chat = document.getElementById('chat');
-            chat.innerHTML = '';
-            const thread = threads[currentId];
-            if (!thread) return;
-
-            if (thread.messages.length === 0) {
-                chat.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-slate-500">
-                        <div class="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-6">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                        </div>
-                        <p class="text-lg font-medium text-slate-400 mb-1">Commencez une conversation</p>
-                        <p class="text-sm">Envoyez un message pour commencer</p>
-                    </div>`;
-                return;
-            }
-
-            thread.messages.forEach(msg => {
-                const isUser = msg.role === 'user';
-                const div = document.createElement('div');
-                div.className = `fade-in flex ${isUser ? 'justify-end' : 'justify-start'}`;
-
-                const bubble = document.createElement('div');
-                bubble.className = `${isUser ? 'msg-user' : 'msg-assistant'} group px-5 py-3 max-w-[75%] ${isUser ? 'text-right' : ''}`;
-                bubble.style = 'word-break: break-word; overflow-wrap: break-word;';
-
-                if (isUser) {
-                    bubble.textContent = msg.content;
-                } else {
-                    bubble.innerHTML = renderMarkdown(msg.content);
-                    bubble.querySelectorAll('pre').forEach(pre => {
-                        const wrapper = document.createElement('div');
-                        wrapper.style = 'position: relative;';
-                        const btn = document.createElement('button');
-                        btn.className = 'copy-btn absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs px-2 py-1 rounded transition';
-                        btn.textContent = 'Copier';
-                        btn.onclick = () => {
-                            navigator.clipboard.writeText(pre.textContent);
-                            btn.textContent = '✓ Copié';
-                            setTimeout(() => btn.textContent = 'Copier', 2000);
-                        };
-                        pre.style = 'background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; overflow-x: auto;';
-                        pre.parentNode.insertBefore(wrapper, pre);
-                        wrapper.appendChild(btn);
-                        wrapper.appendChild(pre);
-                    });
-                }
-
-                const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-                const timeEl = document.createElement('div');
-                timeEl.className = 'text-xs text-slate-500 mt-1 ' + (isUser ? 'text-right' : 'text-left');
-                timeEl.textContent = time;
-                bubble.appendChild(timeEl);
-
-                div.appendChild(bubble);
-                chat.appendChild(div);
-            });
-
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function renderMarkdown(text) {
-            if (typeof marked !== 'undefined') {
-                marked.setOptions({ breaks: true, gfm: true });
-                return marked.parse(text);
-            }
-            return escapeHtml(text).replace(/\n/g, '<br>');
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('message');
-            const content = input.value.trim();
-            if (!content) return;
-
-            const thread = threads[currentId];
-            const userMsg = { role: 'user', content, timestamp: Date.now() };
-            thread.messages.push(userMsg);
-
-            if (thread.messages.length === 1) {
-                thread.name = content.substring(0, 40) + (content.length > 40 ? '...' : '');
-            }
-
-            save();
-            renderThreads();
-            renderMessages();
-
-            input.value = '';
-            input.style.height = 'auto';
-
-            const sendBtn = document.getElementById('sendBtn');
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Envoi...';
-
-            showTyping();
-
-try {
-                const res = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: msgs })
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.reply || `HTTP ${res.status}`);
-
-                removeTyping();
-
-                thread.messages.push({ role: 'assistant', content: data.reply, timestamp: Date.now() });
-                save();
-                renderMessages();
-
-            } catch (err) {
-                removeTyping();
-                thread.messages.push({ role: 'assistant', content: `Erreur: ${err.message}`, timestamp: Date.now(), isError: true });
-                save();
-                renderMessages();
-            }
-
-            sendBtn.disabled = false;
-            sendBtn.textContent = 'Envoyer';
-        }
-
-        function showTyping() {
-            const chat = document.getElementById('chat');
-            const div = document.createElement('div');
-            div.className = 'flex justify-start fade-in';
-            div.id = 'typingIndicator';
-            div.innerHTML = `<div class="msg-assistant px-5 py-3"><span class="typing text-slate-300">En train d'écrire</span></div>`;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function removeTyping() {
-            const el = document.getElementById('typingIndicator');
-            if (el) el.remove();
-        }
-
-        const textarea = document.getElementById('message');
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
-        });
-
-        textarea.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        renderThreads();
-        renderMessages();
+    document.getElementById('join-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      var f = e.target, btn = f.querySelector('button');
+      btn.disabled = true; btn.textContent = '…';
+      fetch('https://slmrcomqhjwunujntvep.supabase.co/rest/v1/subscribers', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbXJjb21xaGp3dW51am50dmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MzcxODgsImV4cCI6MjA5OTIxMzE4OH0.p2BCrdBYY7wSoPY136OSbg9mCVeEjNJvpsEjZuoV3ME',
+          'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbXJjb21xaGp3dW51am50dmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MzcxODgsImV4cCI6MjA5OTIxMzE4OH0.p2BCrdBYY7wSoPY136OSbg9mCVeEjNJvpsEjZuoV3ME',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ name: f.name.value.trim() || null,
+                               email: f.email.value.trim().toLowerCase() })
+      }).then(function(r){
+        if (r.ok || r.status === 409) {
+          f.outerHTML = '<p class="tagline" style="opacity:1;animation:none">' +
+                        'You are in the pride. ᛊ</p>';
+          document.getElementById('join-note').textContent =
+            'We will roar only when it matters.';
+        } else { throw new Error(r.status); }
+      }).catch(function(){
+        btn.disabled = false; btn.textContent = 'Try again';
+      });
+    });
     </script>
+  </section>
+
+  <!-- ═══ SUPPORT ═══ -->
+  <section id="support">
+    <div class="sep"></div>
+    <a class="btn" href="https://ko-fi.com/awakenlions" target="_blank" rel="noopener">
+      Support the project
+    </a>
+  </section>
+
+  <footer class="foot">
+    <span translate="no" class="notranslate">&copy; 2026 Awaken Lions</span>
+    &nbsp;·&nbsp;
+    <a href="mailto:contact@awaken-lions.com">contact</a>
+    <a class="rune" href="/quest.html" aria-label="ᛃ">ᛃ</a>
+  </footer>
+
+  <!--
+    ᚠ — The first fire was not given. It was taken.
+    If you found this, you're paying attention.
+    More will come. Watch the frequencies.
+  -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function(){
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof THREE === 'undefined') return;
+    var canvas = document.getElementById('ondes');
+    var renderer, scene, camera, points, geo;
+    var small = innerWidth < 700;
+    var NX = small ? 90 : 160;   // points le long de l'onde
+    var NZ = small ? 26 : 42;    // nombre de lignes
+    var SX = 260, SZ = 150;      // étendue monde
+
+    // Chaque ligne = sa propre onde : longueur, amplitude, vitesse, phase
+    var lines = [];
+    for (var k = 0; k < NZ; k++) {
+      var t = k / (NZ - 1);
+      lines.push({
+        lambda: 26 + 74 * Math.pow(Math.sin(3.1 * t + 0.4), 2), // λ variées
+        amp:    3.5 + 9 * Math.sin(2.2 * t + 1.1) * Math.sin(2.2 * t + 1.1),
+        omega:  0.35 + 0.75 * t,
+        phase:  t * 6.28 * 1.7
+      });
+    }
+
+    renderer = new THREE.WebGLRenderer({canvas: canvas, alpha: true, antialias: false});
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x0b0b0b, 170, 420);
+    camera = new THREE.PerspectiveCamera(52, 1, 1, 600);
+
+    // Sprite lumineux : cœur blanc chaud (210,207,204) + halo bleuté (160,182,214)
+    function dotTexture(){
+      var s = 64, cv = document.createElement('canvas');
+      cv.width = cv.height = s;
+      var g = cv.getContext('2d');
+      var grd = g.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+      grd.addColorStop(0.00, 'rgba(210,207,204,1)');   // cœur net
+      grd.addColorStop(0.18, 'rgba(210,207,204,1)');
+      grd.addColorStop(0.26, 'rgba(210,207,204,0.55)'); // chute rapide = piqué
+      grd.addColorStop(0.50, 'rgba(160,182,214,0.22)'); // halo fin
+      grd.addColorStop(1.00, 'rgba(160,182,214,0)');
+      g.fillStyle = grd; g.fillRect(0, 0, s, s);
+      return new THREE.CanvasTexture(cv);
+    }
+
+    geo = new THREE.BufferGeometry();
+    var pos = new Float32Array(NX * NZ * 3);
+    var col = new Float32Array(NX * NZ * 3);
+    var i, k2, x, z, v, o = 0;
+    for (k2 = 0; k2 < NZ; k2++) for (i = 0; i < NX; i++) {
+      x = (i/(NX-1) - .5) * SX; z = (k2/(NZ-1) - .5) * SZ;
+      pos[o] = x; pos[o+1] = 0; pos[o+2] = z;
+      v = .5 + .5 * Math.random();          // dégradé de luminosité conservé
+      col[o] = v; col[o+1] = v; col[o+2] = v;
+      o += 3;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    points = new THREE.Points(geo, new THREE.PointsMaterial({
+      size: small ? 2.2 : 2.7, map: dotTexture(), vertexColors: true,
+      transparent: true, opacity: .9, sizeAttenuation: true,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(points);
+
+    function resize(){
+      renderer.setSize(innerWidth, innerHeight, false);
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+    }
+    addEventListener('resize', resize); resize();
+
+    var running = true;
+    document.addEventListener('visibilitychange',
+      function(){ running = !document.hidden; });
+
+    var t0 = performance.now();
+    (function loop(){
+      requestAnimationFrame(loop);
+      if (!running) return;
+      var t = (performance.now() - t0) / 1000;
+      var p = geo.attributes.position.array, o = 0, L;
+      for (var k = 0; k < NZ; k++) {
+        L = lines[k];
+        for (var i = 0; i < NX; i++) {
+          p[o+1] = L.amp * Math.sin(6.2832 * p[o] / L.lambda
+                                    + t * L.omega + L.phase);
+          o += 3;
+        }
+      }
+      geo.attributes.position.needsUpdate = true;
+      // Dérive de caméra : du profil (sinusoïdes) au 3/4 plongeant, très lent
+      var a = t * 0.045;
+      camera.position.set(
+        Math.sin(a) * 125,
+        26 + 42 * (0.5 + 0.5 * Math.sin(t * 0.03)),
+        Math.cos(a * 0.7) * 135);
+      camera.lookAt(0, -10, 0);
+      renderer.render(scene, camera);
+    })();
+  })();
+  </script>
+
 </body>
 </html>
